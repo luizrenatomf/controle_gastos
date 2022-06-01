@@ -99,42 +99,10 @@ $meses = array("Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Ag
             },
         });
     });
-
-    function excluir(id) {           
-        const frmExclusao = $("#formularioExclusao");
-        $.ajax ({
-            dataType: "json",
-            type: frmExclusao.attr('method'),
-            url: frmExclusao.attr('action')+"?id="+id,
-            data: id,
-            success: function(retorno) {
-                alert('oi')
-                if(retorno.success) {
-                    $("#mensagem").append("<div class=\"alert alert-success\" role=\"alert\"><h6 align=\"center\">"+retorno.html+"</h6></div>");
-                    $("#visualizar").click();
-                }
-                else {
-                    $("#mensagem").append("<div class=\"alert alert-danger\" role=\"alert\"><h6 align=\"center\">Erro ao excluir registro.</h6></div>");
-                    window.setTimeout(function(){$("#mensagem").empty()},3000)
-                }
-            },
-            error: function(retorno) {
-                alert('erro')
-                if(retorno.success) {
-                    $("#mensagem").append("<div class=\"alert alert-success\" role=\"alert\"><h6 align=\"center\">"+retorno.html+"</h6></div>");
-                    $("#visualizar").click();
-                }
-                else {
-                    $("#mensagem").append("<div class=\"alert alert-danger\" role=\"alert\"><h6 align=\"center\">Erro ao excluir registro.</h6></div>");
-                    window.setTimeout(function(){$("#mensagem").empty()},3000)
-                }
-            }
-        });
-    }
 </script>
 
-<?php
+<?php 
 
-include "include/rodape.php";
+require_once "include/rodape.php";
 
 ?>

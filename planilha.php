@@ -1,35 +1,31 @@
 <?php
 
-$nomePagina = "Planilha de gastos por período";
-require_once "include/valida_cookies.inc";
 require_once "include/conecta_banco.inc";
-include "include/cabecalho.php";
 
-$meses = array("Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez");
-
-$email = $_COOKIE["email"];
-
-$mes = $_POST["mes"];
-$ano = $_POST["ano"];
-$mes2 = $_POST["mes2"];
-$ano2 = $_POST["ano2"];
+$email = $_COOKIE['email'];
+$mes = $_POST['mes'] ? $_POST['mes'] : ($_GET['mes'] ? $_GET['mes'] : '');
+$ano = $_POST['ano'] ? $_POST['ano'] : ($_GET['ano'] ? $_GET['ano'] : '');
+$mes2 = $_POST['mes2'] ? $_POST['mes2'] : ($_GET['mes2'] ? $_GET['mes2'] : '');
+$ano2 = $_POST['ano2'] ? $_POST['ano2'] : ($_GET['ano2'] ? $_GET['ano2'] : '');
 
 $data = "$ano-$mes-01";
 $data2 = "$ano2-$mes2-01";
 $array_datas = $RF = $RV = $DF = $DV = array();
+
+$meses = array("Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez");
 
 $sql = "select descricao, tipo, data, valor
           from receitas_despesas
          where email = '$email'
            and data between '$data' and '$data2'
          order by data, descricao";
-$res = $conexao->query($sql);
+
+         $res = $conexao->query($sql);
 $rows = $res->fetchAll();
 
-if($rows == 0)
+if(empty($rows))
 {
-    echo "Não há receitas e despesas no período escolhido.";
-    exit;
+    $response = array("success" => false, "html" => "Registros não encontrados para o período especificado.");    
 }
 else
 {
@@ -143,158 +139,173 @@ else
             }
         }
     }    
-}
-$numero_colunas = sizeof($array_datas);
-$colunas_html = $numero_colunas + 1;
 
-?>
-<div align="center">
-    <center>
-        <table border="1" cellspacing="0">
-            <tr>
-                <td width="142"></td>
-                <?php
-                    foreach($array_datas as $data)
-                    {
-                        echo "<td align=\"center\" width=\"100\"><b><font color=\"000080\">$data</font></b></td>";
-                    }
-                ?>
+    $numero_colunas = sizeof($array_datas);
+    $colunas_html = $numero_colunas + 1;
+
+    $html = "
+    <div align=\"center\">
+        <center>
+            <table border=\"1\" cellspacing=\"0\">
+                <tr>
+                    <td width=\"142\"></td>
+    ";                
+
+    foreach($array_datas as $data)
+    {
+        $html .= "<td align=\"center\" width=\"100\"><b><font color=\"000080\">$data</font></b></td>";
+    }
+
+    $html .= " 
             </tr>
             <tr>
-                <td colspan="<?= $colunas_html; ?>" bgcolor="#F5F5F5">
+                <td colspan=\"<?= $colunas_html; ?>\" bgcolor=\"#F5F5F5\">
                     <b>RECEITAS FIXAS</b>
                 </td>
             </tr>
-            <?php
-                for($i = 0; $i < sizeof($RF); $i++)
-                {
-                    $descricao = $RF[$i];
-                    echo "<tr><td width=\"142\">$descricao</td>";
-                    for($j = 0; $j < $numero_colunas; $j++)
-                    {
-                        $data = $array_datas[$j];
-                        if(isset($receitas_fixas[$descricao][$data]))
-                        {
-                            $valor = $receitas_fixas[$descricao][$data];
-                            echo "<td align=\"center\" width=\"100\"> " . number_format($valor, 2, ',', '.') . "</td>";
-                        }
-                        else
-                        {
-                            echo "<td align=\"center\" width=\"100\">&nbsp;&nbsp;</td>";
-                        }
-                    }
-                    echo "</tr>";
-                }
-            ?>
+    ";        
+
+    for($i = 0; $i < sizeof($RF); $i++)
+    {
+        $descricao = $RF[$i];
+        $html .= "<tr><td width=\"142\">$descricao</td>";
+        for($j = 0; $j < $numero_colunas; $j++)
+        {
+            $data = $array_datas[$j];
+            if(isset($receitas_fixas[$descricao][$data]))
+            {
+                $valor = $receitas_fixas[$descricao][$data];
+                $html .= "<td align=\"center\" width=\"100\"> " . number_format($valor, 2, ',', '.') . "</td>";
+            }
+            else
+            {
+                $html .= "<td align=\"center\" width=\"100\">&nbsp;&nbsp;</td>";
+            }
+        }
+        $html .= "</tr>";
+    }
+
+    $html .= "
             <tr>
-                <td colspan="<?= $colunas_html; ?>" bgcolor="#F5F5F5">
+                <td colspan=\"<?= $colunas_html; ?>\" bgcolor=\"#F5F5F5\">
                     <b>RECEITAS VARIÁVEIS</b>
                 </td>
             </tr>
-            <?php
-                for($i = 0; $i < sizeof($RV); $i++)
-                {
-                    $descricao = $RV[$i];
-                    echo "<tr><td width=\"142\">$descricao</td>";
-                    for($j = 0; $j < $numero_colunas; $j++)
-                    {
-                        $data = $array_datas[$j];
-                        if(isset($receitas_variaveis[$descricao][$data]))
-                        {
-                            $valor = $receitas_variaveis[$descricao][$data];
-                            echo "<td align=\"center\" width=\"100\"> " . number_format($valor, 2, ',', '.') . "</td>";
-                        }
-                        else
-                        {
-                            echo "<td align=\"center\" width=\"100\">&nbsp;&nbsp;</td>";
-                        }
-                    }
-                    echo "</tr>";
-                }
-            ?>
+    ";
+
+    for($i = 0; $i < sizeof($RV); $i++)
+    {
+        $descricao = $RV[$i];
+        $html .= "<tr><td width=\"142\">$descricao</td>";
+        for($j = 0; $j < $numero_colunas; $j++)
+        {
+            $data = $array_datas[$j];
+            if(isset($receitas_variaveis[$descricao][$data]))
+            {
+                $valor = $receitas_variaveis[$descricao][$data];
+                $html .= "<td align=\"center\" width=\"100\"> " . number_format($valor, 2, ',', '.') . "</td>";
+            }
+            else
+            {
+                $html .= "<td align=\"center\" width=\"100\">&nbsp;&nbsp;</td>";
+            }
+        }
+        $html .= "</tr>";
+    }
+
+    $html .= "
             <tr>
-                <td width="142" bgcolor="#D7FFFF"><b>Total Receitas:</b></td>
-                <?php
-                    foreach($array_datas as $data)
-                    {
-                        if(isset($total_receitas[$data]))
-                        {
-                            $total = $total_receitas[$data];
-                        }
-                        else
-                        {
-                            $total = 0;
-                        }
-                        echo "<td align=\"center\" bgcolor=\"#D7FFFF\" width=\"100\"><b> " . number_format($total, 2, ',', '.') . "</b></td>";
-                    }
-                ?>
+                <td width=\"142\" bgcolor=\"#D7FFFF\"><b>Total Receitas:</b></td>
+    ";
+
+    foreach($array_datas as $data)
+    {
+        if(isset($total_receitas[$data]))
+        {
+            $total = $total_receitas[$data];
+        }
+        else
+        {
+            $total = 0;
+        }
+        $html .= "<td align=\"center\" bgcolor=\"#D7FFFF\" width=\"100\"><b> " . number_format($total, 2, ',', '.') . "</b></td>";
+    }
+
+    $html .= "
             </tr>
             <tr>
-                <td colspan="<?= $colunas_html; ?>" bgcolor="#F5F5F5"><b>DESPESAS FIXAS</b></td>
+                <td colspan=\"<?= $colunas_html; ?>\" bgcolor=\"#F5F5F5\"><b>DESPESAS FIXAS</b></td>
             </tr>
-            <?php
-                for($i = 0; $i < sizeof($DF); $i++)
-                {
-                    $descricao = $DF[$i];
-                    echo "<tr><td width=\"142\">$descricao</td>";
-                    for($j = 0; $j < $numero_colunas; $j++)
-                    {
-                        $data = $array_datas[$j];
-                        if(isset($despesas_fixas[$descricao][$data]))
-                        {
-                            $valor = $despesas_fixas[$descricao][$data];
-                            echo "<td align=\"center\" width=\"100\"> " . number_format($valor, 2, ',', '.') . "</td>";
-                        }
-                        else
-                        {
-                            echo "<td align=\"center\" width=\"100\">&nbsp;&nbsp;</td>";
-                        }
-                    }
-                    echo "</tr>";
-                }
-            ?>
+    ";        
+
+    for($i = 0; $i < sizeof($DF); $i++)
+    {
+        $descricao = $DF[$i];
+        $html .= "<tr><td width=\"142\">$descricao</td>";
+        for($j = 0; $j < $numero_colunas; $j++)
+        {
+            $data = $array_datas[$j];
+            if(isset($despesas_fixas[$descricao][$data]))
+            {
+                $valor = $despesas_fixas[$descricao][$data];
+                $html .= "<td align=\"center\" width=\"100\"> " . number_format($valor, 2, ',', '.') . "</td>";
+            }
+            else
+            {
+                $html .= "<td align=\"center\" width=\"100\">&nbsp;&nbsp;</td>";
+            }
+        }
+        $html .= "</tr>";
+    }
+
+    $html .= "
             <tr>
-                <td colspan="<?= $colunas_html; ?>" bgcolor="#F5F5F5"><b>DESPESAS VARIÁVEIS</b></td>
+                <td colspan=\"<?= $colunas_html; ?>\" bgcolor=\"#F5F5F5\"><b>DESPESAS VARIÁVEIS</b></td>
             </tr>
-            <?php
-                for($i = 0; $i < sizeof($DV); $i++)
-                {
-                    $descricao = $DV[$i];                        
-                    echo "<tr><td width=\"142\">$descricao</td>";
-                    for($j = 0; $j < $numero_colunas; $j++)
-                    {
-                        $data = $array_datas[$j];
-                        if(isset($despesas_variaveis[$descricao][$data]))
-                        {
-                            $valor = $despesas_variaveis[$descricao][$data];
-                            echo "<td align=\"center\" width=\"100\"> " . number_format($valor, 2, ',', '.') . "</td>";
-                        }
-                        else
-                        {
-                            echo "<td align=\"center\" width=\"100\">&nbsp;&nbsp;</td>";
-                        }
-                    }
-                    echo "</tr>";
-                }
-            ?>
+    ";
+
+    for($i = 0; $i < sizeof($DV); $i++)
+    {
+        $descricao = $DV[$i];                        
+        $html .= "<tr><td width=\"142\">$descricao</td>";
+        for($j = 0; $j < $numero_colunas; $j++)
+        {
+            $data = $array_datas[$j];
+            if(isset($despesas_variaveis[$descricao][$data]))
+            {
+                $valor = $despesas_variaveis[$descricao][$data];
+                $html .= "<td align=\"center\" width=\"100\"> " . number_format($valor, 2, ',', '.') . "</td>";
+            }
+            else
+            {
+                $html .= "<td align=\"center\" width=\"100\">&nbsp;&nbsp;</td>";
+            }
+        }
+        $html .= "</tr>";
+    }
+
+    $html .= "
             <tr>
-                <td width="142" bgcolor="#D7FFFF"><b>Total Despesas:</b></td>
-                <?php
-                    foreach($array_datas as $data)
-                    {
-                        if(isset($total_despesas[$data]))
-                        {
-                            $total = $total_despesas[$data];
-                        }
-                        else
-                        {
-                            $total = 0;
-                        }
-                        echo "<td align=\"center\" bgcolor=\"#D7FFFF\" width=\"100\"><b> " . number_format($total, 2, ',', '.') . "</b></td>";
-                    }
-                ?>
+                <td width=\"142\" bgcolor=\"#D7FFFF\"><b>Total Despesas:</b></td>
+    ";
+
+    foreach($array_datas as $data)
+    {
+        if(isset($total_despesas[$data]))
+        {
+            $total = $total_despesas[$data];
+        }
+        else
+        {
+            $total = 0;
+        }
+        $html .= "<td align=\"center\" bgcolor=\"#D7FFFF\" width=\"100\"><b> " . number_format($total, 2, ',', '.') . "</b></td>";
+    }
+
+    $html .= "
             </tr>
-<!--                
+    ";        
+/*                
             <tr>
                 <td width="142"><b>GRÁFICO DESPESAS</b></td>
                 <?php
@@ -327,41 +338,45 @@ $colunas_html = $numero_colunas + 1;
                     }
                 ?>
             </tr>
--->                
+*/
+    
+    $html .= "               
             <tr>
-                <td width="142" bgcolor="#CCFFCC"><b>SALDO</b></td>
-                <?php
-                    foreach($array_datas as $data)
-                    {
-                        $saldo = 0;
-                        if(isset($total_receitas[$data]))
-                        {
-                            $saldo += $total_receitas[$data];
-                        }
-                        if(isset($total_despesas[$data]))
-                        {
-                            $saldo -= $total_despesas[$data];
-                        }
-                        if($saldo < 0)
-                        {
-                            $cor = "#FF0000";
-                        }
-                        else
-                        {
-                            $cor = "#0000FF";
-                        }
-                        echo "<td align=\"center\" bgcolor=\"#CFFCC\" width=\"100\"><font colo=\"$cor\"><b> " . number_format($saldo, 2, ',', '.') . "</b></font></td>";
-                    }
-                ?>
-            </tr>
-        </table>
-    </center>
-</div>
-<p align="center"><a href="principal.php">Voltar</a></p>
+                <td width=\"142\" bgcolor=\"#CCFFCC\"><b>SALDO</b></td>
+    ";
 
-<?php
+    foreach($array_datas as $data)
+    {
+        $saldo = 0;
+        if(isset($total_receitas[$data]))
+        {
+            $saldo += $total_receitas[$data];
+        }
+        if(isset($total_despesas[$data]))
+        {
+            $saldo -= $total_despesas[$data];
+        }
+        if($saldo < 0)
+        {
+            $cor = "#FF0000";
+        }
+        else
+        {
+            $cor = "#0000FF";
+        }
+        $html .= "<td align=\"center\" bgcolor=\"#CFFCC\" width=\"100\"><font colo=\"$cor\"><b> " . number_format($saldo, 2, ',', '.') . "</b></font></td>";
+    }
 
-include "./include/rodape.php";
+    $html .= "
+                    </tr>
+                </table>
+            </center>
+        </div>
+    ";
+
+    $response = array("success" => true, "html" => $html);
+}
+
+echo json_encode($response);
 
 ?>
-

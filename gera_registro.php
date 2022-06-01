@@ -13,11 +13,11 @@ $data2 = "$ano2-$mes2-01";
 
 $tipos = array("DF" => "Despesa fixa","DV" => "Despesa variável","RF" => "Receita fixa","RV" => "Receita variável");
 
-$sql = "select id, descricao, data, valor, tipo
+$sql = "select descricao, data, valor, tipo
           from receitas_despesas
          where email = '$email'
            and data between '$data' and '$data2'
-         order by data desc, id desc";
+         order by data, tipo, descricao";
 
 $res = $conexao->query($sql);
 $rows = $res->fetchAll();
@@ -26,41 +26,36 @@ if(empty($rows))
 {
     $response = array("success" => false, "html" => "Registros não encontrados para o período especificado.");
 }
-else
+else 
 {
     $html = "
-    <form action=\"elimina.php\" method=\"POST\" name=\"formularioExclusao\" id=\"formularioExclusao\"> 
-        <div class=\"container\">
+    <div class=\"container\">
             <table class=\"table table-sm table-hover\">
                 <thead>
                     <tr>
-                        <th scope=\"col\" class=\"text-center\">ID</th>
                         <th scope=\"col\" class=\"text-center\">Descrição</th>
                         <th scope=\"col\" class=\"text-center\">Valor</th>
                         <th scope=\"col\" class=\"text-center\">Referência</th>
                         <th scope=\"col\" class=\"text-center\">Tipo</th>
-                        <th scope=\"col\" class=\"text-center\">Excluir?</th>
                     </tr>
                 </thead>
                 <tbody>
-    ";
-
+    ";            
+    
     foreach($rows as $row)
     {
-        $id = $row["id"];
-        $descricao = $row["descricao"];
-        $data = explode('-',$row['data'])[1]."/".explode('-',$row['data'])[0];
-        $valor = number_format($row["valor"], 2, ',', '.');
-        $tipo = $tipos[$row["tipo"]];
+        $descricao = $row['descricao'];
+        $tipo      = $tipos[$row['tipo']];
+        $data      = explode('-',$row['data'])[1]."/".explode('-',$row['data'])[0];
+        $valor     = number_format($row['valor'], 2, ',', '.');
 
-        $html .= "<tr><th scope=\"row\" class=\"text-center\">$id</th><td class=\"text-center\">$descricao</td><td class=\"text-center\">R$".$valor."</td><td class=\"text-center\">$data</td><td class=\"text-center\">$tipo</td><td class=\"text-center\"><a href=\"\" onclick=\"return excluir($id);\">Excluir</a></td></tr>";
+        $html .= "<tr><td class=\"text-center\">$descricao</td><td class=\"text-center\">R$".$valor."</td><td class=\"text-center\">$data</td><td class=\"text-center\">$tipo</td></tr>";
     }
 
     $html .= "
-                    </tbody>
-                </table>
-            </div>
-        </form>
+                </tbody>
+            </table>
+        </div>
     ";
 
     $response = array("success" => true, "html" => $html);
