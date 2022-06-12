@@ -16,11 +16,11 @@ include "include/cabecalho.php";
 </p>
 <p align="center">
     <b>Visualizar:</b><br>
-    <a href="periodo.php"><font size="4">Planilha de gastos mensais</font></a>
+    <a href="periodo.php?tipo=P"><font size="4">Planilha de gastos mensais</font></a>
 </p>
 <p align="center">
     <b>Excluir:</b><br>
-    <a href="excluir.php"><font size="4">Excluir receitas e despesas</font></a><br>
+    <a href="periodo.php?tipo=E"><font size="4">Excluir receitas e despesas</font></a><br>
 </p>
 
 <?php
